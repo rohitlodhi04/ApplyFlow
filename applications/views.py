@@ -1,4 +1,4 @@
-from rest_framework import generics
+from rest_framework import generics , filters
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from .models import JobApplication
@@ -8,6 +8,8 @@ from .serializers import JobApplicationSerializer, RegisterSerializer
 class JobApplicationListCreateView(generics.ListCreateAPIView):
     serializer_class = JobApplicationSerializer
     permission_classes = [IsAuthenticated]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['company_name', 'job_role']
 
     def get_queryset(self):
         return JobApplication.objects.filter(owner=self.request.user)
