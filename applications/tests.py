@@ -29,3 +29,16 @@ class ApplicationOwnershipTests(APITestCase):
         response = self.client.get('/api/applications/')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 0)
+
+    def test_client_cannot_set_owner(self):
+        self.client.force_authenticate(user=self.user1)
+        data = {
+            'owner': self.user2.id,
+            'company_name': 'Amazon',
+            'job_role': 'Backend Intern',
+        }
+        response = self.client.post('/api/applications/', data, format='json')
+        self.assertEqual(response.status_code, 201)
+
+        application = JobApplication.objects.get(company_name='Amazon')
+        self.assertEqual(application.owner, self.user1)
