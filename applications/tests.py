@@ -14,12 +14,11 @@ class ApplicationOwnershipTests(APITestCase):
         self.user2 = User.objects.create_user(
             username='user2', password='TestPass@123'
         )
-        JobApplication.objects.create(
+        self.application = JobApplication.objects.create(
             owner=self.user1,
             company_name='Google',
             job_role='SDE Intern',
         )
-
     def test_list_requires_authentication(self):
         response = self.client.get('/api/applications/')
         self.assertEqual(response.status_code, 401)
@@ -42,3 +41,12 @@ class ApplicationOwnershipTests(APITestCase):
 
         application = JobApplication.objects.get(company_name='Amazon')
         self.assertEqual(application.owner, self.user1)
+
+    def test_other_user_cannot_delete_application(self):
+        self.client.force_authenticate(user=self.user2)
+        url = f'/api/applications/{self.application.id}/'
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, 404)
+        self.assertTrue(
+            JobApplication.objects.filter(id=self.application.id).exists()
+        )
