@@ -50,3 +50,17 @@ class ApplicationOwnershipTests(APITestCase):
         self.assertTrue(
             JobApplication.objects.filter(id=self.application.id).exists()
         )
+
+    def test_stats_counts_own_applications(self):
+        self.client.force_authenticate(user=self.user1)
+        response = self.client.get('/api/applications/stats/')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['total'], 1)
+        self.assertEqual(response.data['by_status'], {'APPLIED': 1})
+
+    def test_stats_does_not_count_other_users_applications(self):
+        self.client.force_authenticate(user=self.user2)
+        response = self.client.get('/api/applications/stats/')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['total'], 0)
+        self.assertEqual(response.data['by_status'], {})
