@@ -1,11 +1,35 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 function App() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [token, setToken] = useState(localStorage.getItem('access'))
   const [error, setError] = useState('')
+  const [applications, setApplications] = useState([])
 
+  useEffect(() => {
+    if (!token) return
+
+    const fetchApplications = async () => {
+      try {
+        const response = await fetch('http://127.0.0.1:8000/api/applications/', {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (response.status === 401) {
+          localStorage.removeItem('access')
+          setToken(null)
+          return
+        }
+        const data = await response.json()
+        setApplications(data)
+      } catch (err) {
+        console.error(err)
+      }
+    }
+
+    fetchApplications()
+  }, [token])
+  
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
@@ -37,8 +61,14 @@ function App() {
     return (
       <div>
         <h1>ApplyFlow</h1>
-        <p>Logged in</p>
         <button onClick={handleLogout}>Logout</button>
+        <ul>
+          {applications.map((app) => (
+            <li key={app.id}>
+              {app.company_name} - {app.job_role} ({app.status})
+            </li>
+          ))}
+        </ul>
       </div>
     )
   }
