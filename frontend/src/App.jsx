@@ -3,9 +3,12 @@ import { useState } from 'react'
 function App() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [token, setToken] = useState(localStorage.getItem('access'))
+  const [error, setError] = useState('')
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setError('')
     try {
       const response = await fetch('http://127.0.0.1:8000/api/token/', {
         method: 'POST',
@@ -13,11 +16,31 @@ function App() {
         body: JSON.stringify({ username, password }),
       })
       const data = await response.json()
-      console.log('Status:', response.status)
-      console.log('Access token mila:', Boolean(data.access))
-    } catch (error) {
-      console.log('Network error:', error)
+      if (response.ok) {
+        localStorage.setItem('access', data.access)
+        setToken(data.access)
+        setPassword('')
+      } else {
+        setError('Galat username ya password')
+      }
+    } catch (err) {
+      setError('Server se connect nahi ho paya')
     }
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('access')
+    setToken(null)
+  }
+
+  if (token) {
+    return (
+      <div>
+        <h1>ApplyFlow</h1>
+        <p>Logged in</p>
+        <button onClick={handleLogout}>Logout</button>
+      </div>
+    )
   }
 
   return (
@@ -38,6 +61,7 @@ function App() {
         />
         <button type="submit">Login</button>
       </form>
+      {error && <p>{error}</p>}
     </div>
   )
 }
