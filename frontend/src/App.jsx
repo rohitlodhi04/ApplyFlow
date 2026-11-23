@@ -4,9 +4,20 @@ function App() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    console.log('Login attempt for:', username)
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/token/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      })
+      const data = await response.json()
+      console.log('Status:', response.status)
+      console.log('Access token mila:', Boolean(data.access))
+    } catch (error) {
+      console.log('Network error:', error)
+    }
   }
 
   return (
