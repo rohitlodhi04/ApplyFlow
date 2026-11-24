@@ -6,6 +6,8 @@ function App() {
   const [token, setToken] = useState(localStorage.getItem('access'))
   const [error, setError] = useState('')
   const [applications, setApplications] = useState([])
+  const [company, setCompany] = useState('')
+  const [role, setRole] = useState('')
 
   useEffect(() => {
     if (!token) return
@@ -57,11 +59,55 @@ function App() {
     setToken(null)
   }
 
+  const handleAdd = async (e) => {
+    e.preventDefault()
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/applications/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ company_name: company, job_role: role }),
+      })
+      if (response.status === 401) {
+        localStorage.removeItem('access')
+        setToken(null)
+        return
+      }
+      if (response.ok) {
+        const newApp = await response.json()
+        setApplications([newApp, ...applications])
+        setCompany('')
+        setRole('')
+      } else {
+        console.error('Add failed:', response.status)
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   if (token) {
     return (
       <div>
         <h1>ApplyFlow</h1>
         <button onClick={handleLogout}>Logout</button>
+        <form onSubmit={handleAdd}>
+          <input
+            type="text"
+            placeholder="Company"
+            value={company}
+            onChange={(e) => setCompany(e.target.value)}
+          />
+          <input
+            type="text"
+            placeholder="Job role"
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+          />
+          <button type="submit">Add</button>
+        </form>
         <ul>
           {applications.map((app) => (
             <li key={app.id}>
