@@ -109,6 +109,34 @@ function App() {
     }
   }
 
+  const handleStatusChange = async (id, newStatus) => {
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/api/applications/${id}/`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status: newStatus }),
+      })
+      if (response.status === 401) {
+        localStorage.removeItem('access')
+        setToken(null)
+        return
+      }
+      if (response.ok) {
+        const updated = await response.json()
+        setApplications(
+          applications.map((app) => (app.id === id ? updated : app))
+        )
+      } else {
+        console.error('Update failed:', response.status)
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   if (token) {
     return (
       <div>
@@ -132,7 +160,18 @@ function App() {
         <ul>
           {applications.map((app) => (
             <li key={app.id}>
-              {app.company_name} - {app.job_role} ({app.status})
+              {app.company_name} - {app.job_role}
+              <select
+                value={app.status}
+                onChange={(e) => handleStatusChange(app.id, e.target.value)}
+              >
+                <option value="WISHLIST">Wishlist</option>
+                <option value="APPLIED">Applied</option>
+                <option value="ASSESSMENT">Assessment</option>
+                <option value="INTERVIEW">Interview</option>
+                <option value="OFFER">Offer</option>
+                <option value="REJECTED">Rejected</option>
+              </select>
               <button onClick={() => handleDelete(app.id)}>Delete</button>
             </li>
           ))}
