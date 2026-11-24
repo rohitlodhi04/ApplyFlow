@@ -88,6 +88,27 @@ function App() {
     }
   }
 
+  const handleDelete = async (id) => {
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/api/applications/${id}/`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (response.status === 401) {
+        localStorage.removeItem('access')
+        setToken(null)
+        return
+      }
+      if (response.ok) {
+        setApplications(applications.filter((app) => app.id !== id))
+      } else {
+        console.error('Delete failed:', response.status)
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   if (token) {
     return (
       <div>
@@ -112,6 +133,7 @@ function App() {
           {applications.map((app) => (
             <li key={app.id}>
               {app.company_name} - {app.job_role} ({app.status})
+              <button onClick={() => handleDelete(app.id)}>Delete</button>
             </li>
           ))}
         </ul>
