@@ -8,6 +8,7 @@ function App() {
   const [applications, setApplications] = useState([])
   const [company, setCompany] = useState('')
   const [role, setRole] = useState('')
+  const [stats, setStats] = useState({ total: 0, by_status: {} })
 
   useEffect(() => {
     if (!token) return
@@ -31,6 +32,25 @@ function App() {
 
     fetchApplications()
   }, [token])
+  
+  useEffect(() => {
+    if (!token) return
+
+    const fetchStats = async () => {
+      try {
+        const response = await fetch('http://127.0.0.1:8000/api/applications/stats/', {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (response.ok) {
+          setStats(await response.json())
+        }
+      } catch (err) {
+        console.error(err)
+      }
+    }
+
+    fetchStats()
+  }, [token, applications])
   
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -142,6 +162,11 @@ function App() {
       <div>
         <h1>ApplyFlow</h1>
         <button onClick={handleLogout}>Logout</button>
+        <p>
+          Total: {stats.total} | Applied: {stats.by_status.APPLIED || 0} |
+          Interview: {stats.by_status.INTERVIEW || 0} |
+          Offer: {stats.by_status.OFFER || 0}
+        </p>
         <form onSubmit={handleAdd}>
           <input
             type="text"
