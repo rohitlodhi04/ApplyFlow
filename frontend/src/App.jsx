@@ -9,15 +9,22 @@ function App() {
   const [company, setCompany] = useState('')
   const [role, setRole] = useState('')
   const [stats, setStats] = useState({ total: 0, by_status: {} })
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
 
   useEffect(() => {
     if (!token) return
 
     const fetchApplications = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:8000/api/applications/', {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        const params = new URLSearchParams()
+        if (search) params.append('search', search)
+        if (statusFilter) params.append('status', statusFilter)
+
+        const response = await fetch(
+          `http://127.0.0.1:8000/api/applications/?${params.toString()}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
         if (response.status === 401) {
           localStorage.removeItem('access')
           setToken(null)
@@ -31,7 +38,7 @@ function App() {
     }
 
     fetchApplications()
-  }, [token])
+  }, [token, search, statusFilter])
   
   useEffect(() => {
     if (!token) return
@@ -182,6 +189,24 @@ function App() {
           />
           <button type="submit">Add</button>
         </form>
+        <input
+          type="text"
+          placeholder="Search company or role"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+        >
+          <option value="">All statuses</option>
+          <option value="WISHLIST">Wishlist</option>
+          <option value="APPLIED">Applied</option>
+          <option value="ASSESSMENT">Assessment</option>
+          <option value="INTERVIEW">Interview</option>
+          <option value="OFFER">Offer</option>
+          <option value="REJECTED">Rejected</option>
+        </select>
         <ul>
           {applications.map((app) => (
             <li key={app.id}>
