@@ -11,6 +11,8 @@ function App() {
   const [stats, setStats] = useState({ total: 0, by_status: {} })
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
+  const [mode, setMode] = useState('login')
+  const [message, setMessage] = useState('')
 
   useEffect(() => {
     if (!token) return
@@ -77,6 +79,30 @@ function App() {
         setError('Galat username ya password')
       }
     } catch (err) {
+      setError('Server se connect nahi ho paya')
+    }
+  }
+
+  const handleRegister = async (e) => {
+    e.preventDefault()
+    setError('')
+    setMessage('')
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/register/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      })
+      if (response.ok) {
+        setMessage('Account ban gaya! Ab login karo.')
+        setPassword('')
+        setMode('login')
+      } else {
+        const data = await response.json()
+        setError(Object.values(data).flat()[0])
+      }
+    } catch (err) {
+      console.error(err)
       setError('Server se connect nahi ho paya')
     }
   }
@@ -232,8 +258,8 @@ function App() {
 
   return (
     <div>
-      <h1>ApplyFlow Login</h1>
-      <form onSubmit={handleSubmit}>
+      <h1>{mode === 'login' ? 'ApplyFlow Login' : 'Create account'}</h1>
+      <form onSubmit={mode === 'login' ? handleSubmit : handleRegister}>
         <input
           type="text"
           placeholder="Username"
@@ -246,9 +272,21 @@ function App() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
-        <button type="submit">Login</button>
+        <button type="submit">{mode === 'login' ? 'Login' : 'Sign up'}</button>
       </form>
+      {message && <p>{message}</p>}
       {error && <p>{error}</p>}
+      <button
+        onClick={() => {
+          setMode(mode === 'login' ? 'register' : 'login')
+          setError('')
+          setMessage('')
+        }}
+      >
+        {mode === 'login'
+          ? 'New here? Create an account'
+          : 'Already have an account? Login'}
+      </button>
     </div>
   )
 }
